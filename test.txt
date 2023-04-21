@@ -1,0 +1,55 @@
+import pyaudio
+import wave
+import os
+
+# 녹음 설정
+chunk = 1024
+sample_format = pyaudio.paInt16
+channels = 1
+fs = 44100
+
+# 녹음된 파일 저장 위치
+filename = "/home/pi/recordings.wav"
+
+# PyAudio 객체 생성
+p = pyaudio.PyAudio()
+
+# 스트림 열기
+stream = p.open(format=sample_format,
+                channels=channels,
+                rate=fs,
+                frames_per_buffer=chunk,
+                input=True)
+
+# 녹음된 데이터를 저장할 리스트
+frames = []
+
+# 녹음 시작
+print("Recording...")
+while True:
+    data = stream.read(chunk)
+    frames.append(data)
+
+    # 녹음 중지
+    if not os.path.exists("/proc/asound/card0/pcm0p/sub0/status"):
+        print("Stopping recording...")
+        break
+
+# 스트림 닫기
+stream.stop_stream()
+stream.close()
+p.terminate()
+
+# 녹음된 데이터를 WAV 파일로 저장
+wf = wave.open(filename, "wb")
+wf.setnchannels(channels)
+wf.setsampwidth(p.get_sample_size(sample_format))
+wf.setframerate(fs)
+wf.writeframes(b"".join(frames))
+wf.close()
+
+print("Recording saved as " + filename)
+
+# 업데이트 및 pyaudio 모듈설치를 위한 명령어
+sudo apt-get update
+sudo apt-get install python-pyaudio
