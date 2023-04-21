@@ -1,0 +1,40 @@
+import pyaudio
+import wave
+
+# 녹음 설정
+FORMAT = pyaudio.paInt16
+CHANNELS = 1
+RATE = 44100
+RECORD_SECONDS = 60
+WAVE_OUTPUT_FILENAME = "output.wav"
+
+# PyAudio 객체 생성
+audio = pyaudio.PyAudio()
+
+# 오디오 스트림 열기
+stream = audio.open(format=FORMAT, channels=CHANNELS,
+                    rate=RATE, input=True,
+                    frames_per_buffer=1024)
+
+# 녹음 데이터를 담을 리스트
+frames = []
+
+# 지속적인 녹음 및 녹음 데이터 저장
+for i in range(0, int(RATE / 1024 * RECORD_SECONDS)):
+    data = stream.read(1024)
+    frames.append(data)
+
+# 오디오 스트림 닫기
+stream.stop_stream()
+stream.close()
+audio.terminate()
+
+# 녹음 데이터를 WAV 파일로 저장
+wf = wave.open(WAVE_OUTPUT_FILENAME, 'wb')
+wf.setnchannels(CHANNELS)
+wf.setsampwidth(audio.get_sample_size(FORMAT))
+wf.setframerate(RATE)
+wf.writeframes(b''.join(frames))
+wf.close()
+
+print("Recording file saved completed:", WAVE_OUTPUT_FILENAME)
